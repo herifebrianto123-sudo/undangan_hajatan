@@ -1,0 +1,448 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Profil pengguna terautentikasi untuk pemilik undangan digital.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID unik pengguna Firebase Auth."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Nama tampilan pengguna."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200,
+          "description": "Alamat email terverifikasi pemilik akun."
+        },
+        "photoURL": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "URL foto profil Google."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembuatan profil dari server."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembaruan profil dari server."
+        }
+      },
+      "required": ["uid", "displayName", "email", "createdAt", "updatedAt"]
+    },
+    "BillingSettings": {
+      "title": "BillingSettings",
+      "description": "Pengaturan harga paket dan daftar rekening pembayaran yang dikelola admin.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "ID pengaturan (billing)."
+        },
+        "selfEditTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Judul paket edit sendiri."
+        },
+        "selfEditDesc": {
+          "type": "string",
+          "maxLength": 350,
+          "description": "Deskripsi paket edit sendiri."
+        },
+        "selfEditPrice": {
+          "type": "number",
+          "description": "Harga paket edit sendiri dalam Rupiah."
+        },
+        "adminAssistedTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Judul paket admin yang editkan."
+        },
+        "adminAssistedDesc": {
+          "type": "string",
+          "maxLength": 350,
+          "description": "Deskripsi paket admin yang editkan."
+        },
+        "adminAssistedPrice": {
+          "type": "number",
+          "description": "Harga paket admin yang editkan dalam Rupiah."
+        },
+        "adminWhatsapp": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Nomor WhatsApp Admin untuk konfirmasi pembayaran."
+        },
+        "paymentAccounts": {
+          "type": "array",
+          "description": "Daftar rekening bank, e-wallet, atau instruksi QRIS aktif."
+        },
+        "updatedBy": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Email admin yang terakhir memperbarui pengaturan."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembaruan pengaturan dari server."
+        }
+      },
+      "required": [
+        "id",
+        "selfEditTitle",
+        "selfEditDesc",
+        "selfEditPrice",
+        "adminAssistedTitle",
+        "adminAssistedDesc",
+        "adminAssistedPrice",
+        "adminWhatsapp",
+        "paymentAccounts",
+        "updatedBy",
+        "updatedAt"
+      ]
+    },
+    "InvitationDocument": {
+      "title": "InvitationDocument",
+      "description": "Dokumen undangan digital beserta konfigurasi desain, isi, dan status pembayaran.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "ID dokumen undangan."
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID pemilik undangan."
+        },
+        "isPublished": {
+          "type": "boolean",
+          "description": "Menandakan undangan aktif dapat dibuka oleh tamu."
+        },
+        "isPaid": {
+          "type": "boolean",
+          "description": "Status konfirmasi pembayaran oleh admin."
+        },
+        "paymentStatus": {
+          "type": "string",
+          "enum": ["unpaid", "pending", "paid"],
+          "description": "Status proses pembayaran undangan."
+        },
+        "packageId": {
+          "type": "string",
+          "enum": ["self-edit", "admin-assisted"],
+          "description": "Pilihan paket layanan."
+        },
+        "packageName": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Nama paket layanan saat pemesanan."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Total tagihan dalam Rupiah."
+        },
+        "paymentMethod": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Metode / rekening tujuan transfer yang dipilih."
+        },
+        "invoiceCode": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Kode faktur konfirmasi pembayaran."
+        },
+        "config": {
+          "type": "object",
+          "description": "Konfigurasi lengkap undangan (teks, tema, acara, URL foto/video/musik Drive)."
+        },
+        "paidAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu aktivasi pembayaran oleh admin."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembuatan dokumen dari server."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembaruan dokumen dari server."
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "isPublished",
+        "isPaid",
+        "paymentStatus",
+        "config",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "OrderEntry": {
+      "title": "OrderEntry",
+      "description": "Catatan pesanan aktivasi undangan untuk ditindaklanjuti admin.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "ID pesanan."
+        },
+        "invitationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "ID undangan terkait."
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID pemesan."
+        },
+        "ownerName": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Nama pemesan."
+        },
+        "ownerEmail": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Email pemesan."
+        },
+        "whatsapp": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Nomor WhatsApp pemesan."
+        },
+        "packageId": {
+          "type": "string",
+          "enum": ["self-edit", "admin-assisted"],
+          "description": "Jenis paket yang dipesan."
+        },
+        "packageName": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Label paket."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Nominal tagihan."
+        },
+        "paymentMethod": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Rekening atau metode tujuan transfer."
+        },
+        "invoiceCode": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Kode invoice."
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 400,
+          "description": "Catatan klien untuk admin."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "paid", "cancelled"],
+          "description": "Status verifikasi pesanan."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembuatan pesanan."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembaruan pesanan."
+        }
+      },
+      "required": [
+        "id",
+        "invitationId",
+        "ownerId",
+        "ownerName",
+        "ownerEmail",
+        "whatsapp",
+        "packageId",
+        "packageName",
+        "amount",
+        "paymentMethod",
+        "invoiceCode",
+        "notes",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "GuestEntry": {
+      "title": "GuestEntry",
+      "description": "Daftar nama tamu undangan personal milik pemilik undangan.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "ID entri tamu."
+        },
+        "invitationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "ID undangan induk."
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID pemilik undangan."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Nama tamu undangan."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu penambahan tamu dari server."
+        }
+      },
+      "required": ["id", "invitationId", "ownerId", "name", "createdAt"]
+    },
+    "WishEntry": {
+      "title": "WishEntry",
+      "description": "Ucapan, doa restu, dan konfirmasi kehadiran (RSVP) dari tamu undangan.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "ID entri ucapan."
+        },
+        "invitationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "ID undangan induk."
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID pemilik undangan."
+        },
+        "invitationPublished": {
+          "type": "boolean",
+          "description": "Penanda apakah undangan induk sudah dipublikasikan."
+        },
+        "nama": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Nama tamu pengirim ucapan."
+        },
+        "kehadiran": {
+          "type": "string",
+          "enum": ["Hadir", "Berhalangan"],
+          "description": "Status kehadiran tamu."
+        },
+        "jumlah": {
+          "type": "number",
+          "description": "Jumlah tamu yang hadir (0 sampai 20)."
+        },
+        "ucapan": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400,
+          "description": "Pesan doa dan ucapan dari tamu."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pengiriman ucapan dari server."
+        }
+      },
+      "required": [
+        "id",
+        "invitationId",
+        "ownerId",
+        "invitationPublished",
+        "nama",
+        "kehadiran",
+        "jumlah",
+        "ucapan",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Profil privat pengguna pemilik akun undangan."
+    },
+    "/app_settings/{settingId}": {
+      "schema": { "$ref": "#/entities/BillingSettings" },
+      "description": "Pengaturan harga paket, nomor WA admin, dan daftar rekening tujuan."
+    },
+    "/invitations/{invitationId}": {
+      "schema": { "$ref": "#/entities/InvitationDocument" },
+      "description": "Koleksi utama undangan digital milik pengguna."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/OrderEntry" },
+      "description": "Koleksi pesanan aktivasi dan jasa edit admin."
+    },
+    "/invitations/{invitationId}/guests/{guestId}": {
+      "schema": { "$ref": "#/entities/GuestEntry" },
+      "description": "Subkoleksi daftar nama tamu undangan personal."
+    },
+    "/invitations/{invitationId}/wishes/{wishId}": {
+      "schema": { "$ref": "#/entities/WishEntry" },
+      "description": "Subkoleksi buku tamu, RSVP, dan ucapan doa secara real-time."
+    }
+  }
+}

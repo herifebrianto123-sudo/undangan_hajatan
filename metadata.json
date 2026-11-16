@@ -1,0 +1,6 @@
+{
+  "name": "Undangan Studio — Platform Undangan Digital",
+  "description": "Platform undangan digital interaktif untuk pernikahan, ulang tahun, khitanan, syukuran, dan kelahiran berbahasa Indonesia.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
