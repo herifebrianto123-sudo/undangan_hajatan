@@ -69,10 +69,10 @@ service cloud.firestore {
         && data.id == 'billing'
         && data.selfEditTitle is string && data.selfEditTitle.size() >= 1 && data.selfEditTitle.size() <= 100
         && data.selfEditDesc is string && data.selfEditDesc.size() <= 350
-        && data.selfEditPrice is number && data.selfEditPrice >= 0 && data.selfEditPrice <= 100000000
+        && (data.selfEditPrice is int || data.selfEditPrice is float) && data.selfEditPrice >= 0 && data.selfEditPrice <= 100000000
         && data.adminAssistedTitle is string && data.adminAssistedTitle.size() >= 1 && data.adminAssistedTitle.size() <= 100
         && data.adminAssistedDesc is string && data.adminAssistedDesc.size() <= 350
-        && data.adminAssistedPrice is number && data.adminAssistedPrice >= 0 && data.adminAssistedPrice <= 100000000
+        && (data.adminAssistedPrice is int || data.adminAssistedPrice is float) && data.adminAssistedPrice >= 0 && data.adminAssistedPrice <= 100000000
         && data.adminWhatsapp is string && data.adminWhatsapp.size() <= 32
         && data.paymentAccounts is list && data.paymentAccounts.size() <= 15
         && (data.paymentAccounts.size() == 0 || (
@@ -152,7 +152,7 @@ service cloud.firestore {
         && (!('paymentStatus' in data) || data.paymentStatus in ['unpaid', 'pending', 'paid'])
         && (!('packageId' in data) || data.packageId in ['self-edit', 'admin-assisted'])
         && (!('packageName' in data) || (data.packageName is string && data.packageName.size() <= 120))
-        && (!('amount' in data) || (data.amount is number && data.amount >= 0 && data.amount <= 100000000))
+        && (!('amount' in data) || ((data.amount is int || data.amount is float) && data.amount >= 0 && data.amount <= 100000000))
         && (!('paymentMethod' in data) || (data.paymentMethod is string && data.paymentMethod.size() <= 64))
         && (!('invoiceCode' in data) || (data.invoiceCode is string && data.invoiceCode.size() <= 64))
         && (!('paidAt' in data) || data.paidAt is timestamp)
@@ -181,7 +181,7 @@ service cloud.firestore {
         && data.whatsapp is string && data.whatsapp.size() <= 32
         && data.packageId in ['self-edit', 'admin-assisted']
         && data.packageName is string && data.packageName.size() >= 1 && data.packageName.size() <= 120
-        && data.amount is number && data.amount >= 0 && data.amount <= 100000000
+        && (data.amount is int || data.amount is float) && data.amount >= 0 && data.amount <= 100000000
         && data.paymentMethod is string && data.paymentMethod.size() >= 1 && data.paymentMethod.size() <= 64
         && data.invoiceCode is string && data.invoiceCode.size() >= 1 && data.invoiceCode.size() <= 64
         && data.notes is string && data.notes.size() <= 400
@@ -294,8 +294,8 @@ service cloud.firestore {
           ((isOwner(existing().ownerId) || isAdmin())
             && incoming().diff(existing()).affectedKeys().hasOnly(['config', 'updatedAt']))
           ||
-          // Action 2: Owner submits/updates pending payment request (cannot self-activate isPaid)
-          (isOwner(existing().ownerId)
+          // Action 2: Owner or Admin submits/updates pending payment request (cannot self-activate isPaid)
+          ((isOwner(existing().ownerId) || isAdmin())
             && existing().isPaid == false
             && incoming().isPaid == false
             && incoming().isPublished == false

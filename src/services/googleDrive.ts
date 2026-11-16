@@ -17,7 +17,7 @@ function requireToken(): string {
   const token = getDriveAccessToken();
   if (!token) {
     throw new Error(
-      'Izin Google Drive belum aktif di sesi ini. Klik "Hubungkan Google Drive" terlebih dahulu.'
+      'Sesi penyimpanan media belum aktif. Klik "Aktifkan Penyimpanan Media" terlebih dahulu.'
     );
   }
   return token;
@@ -40,7 +40,7 @@ async function driveFetch(
     clearDriveAccessToken();
     cachedFolderId = null;
     throw new Error(
-      'Sesi Google Drive telah berakhir. Silakan klik "Hubungkan Google Drive" lagi.'
+      'Sesi penyimpanan media telah berakhir. Silakan klik "Aktifkan Penyimpanan Media" lagi.'
     );
   }
 
@@ -72,7 +72,7 @@ export async function findOrCreateStudioFolder(
     accessToken
   );
   if (!searchRes.ok) {
-    throw new Error('Gagal memeriksa folder Google Drive.');
+    throw new Error('Gagal memeriksa folder penyimpanan media.');
   }
 
   const searchJson = (await searchRes.json()) as {
@@ -96,7 +96,7 @@ export async function findOrCreateStudioFolder(
     }
   );
   if (!createRes.ok) {
-    throw new Error('Gagal membuat folder Undangan Studio Media di Google Drive.');
+    throw new Error('Gagal menyiapkan folder penyimpanan media.');
   }
   const created = (await createRes.json()) as { id: string };
   cachedFolderId = created.id;
@@ -121,7 +121,7 @@ async function makeFilePublicReader(
   );
   if (!permRes.ok) {
     throw new Error(
-      'File terunggah ke Drive, namun gagal mengatur izin akses publik untuk tamu.'
+      'File terunggah, namun gagal mengatur izin akses publik untuk tamu.'
     );
   }
 }
@@ -161,7 +161,7 @@ export async function uploadMediaToDrive(
 
   if (!uploadRes.ok) {
     const errText = await uploadRes.text();
-    throw new Error(`Gagal mengunggah media ke Google Drive: ${errText}`);
+    throw new Error(`Gagal mengunggah media: ${errText}`);
   }
 
   const uploaded = (await uploadRes.json()) as {
@@ -196,7 +196,7 @@ export async function listStudioDriveFiles(): Promise<DriveMediaItem[]> {
     accessToken
   );
   if (!res.ok) {
-    throw new Error('Gagal mengambil daftar file dari Google Drive.');
+    throw new Error('Gagal mengambil daftar koleksi media.');
   }
 
   const data = (await res.json()) as {
@@ -229,6 +229,6 @@ export async function deleteDriveFile(fileId: string): Promise<void> {
     }
   );
   if (!res.ok && res.status !== 204) {
-    throw new Error('Gagal menghapus file dari Google Drive.');
+    throw new Error('Gagal menghapus file dari penyimpanan media.');
   }
 }

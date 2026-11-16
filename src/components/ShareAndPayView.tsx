@@ -11,6 +11,7 @@ import {
   LogOut,
   MessageCircle,
   Plus,
+  Share2,
   ShieldCheck,
   Sparkles,
   Trash2,
@@ -40,8 +41,10 @@ interface ShareAndPayViewProps {
   isAdmin?: boolean;
   invitationId: string | null;
   isBusy?: boolean;
+  authError?: string | null;
   onSignInGoogle: () => Promise<void>;
   onSignOut: () => Promise<void>;
+  onAdminQuickActivate?: () => Promise<void>;
   onSubmitOrder: (payload: {
     packageId: PackageId;
     packageName: string;
@@ -71,8 +74,10 @@ export default function ShareAndPayView({
   isAdmin = false,
   invitationId,
   isBusy = false,
+  authError = null,
   onSignInGoogle,
   onSignOut,
+  onAdminQuickActivate,
   onSubmitOrder,
   onAddGuests,
   onRemoveGuest,
@@ -131,6 +136,14 @@ export default function ShareAndPayView({
     window.setTimeout(() => setToastMsg(null), 2400);
   };
 
+  const buildGeneralShareUrl = () => {
+    const base = `${window.location.origin}${window.location.pathname}`;
+    const invParam = invitationId
+      ? `inv=${encodeURIComponent(invitationId)}&`
+      : '';
+    return `${base}?${invParam}guest=1`;
+  };
+
   const buildGuestShareUrl = (guestName: string) => {
     const base = `${window.location.origin}${window.location.pathname}`;
     const invParam = invitationId
@@ -139,8 +152,8 @@ export default function ShareAndPayView({
     return `${base}?${invParam}to=${encodeURIComponent(guestName)}&guest=1`;
   };
 
-  const buildWhatsAppHref = (guestName: string) => {
-    const link = buildGuestShareUrl(guestName);
+  const buildWhatsAppHref = (guestName: string, overrideLink?: string) => {
+    const link = overrideLink || buildGuestShareUrl(guestName);
     const message = `Kepada Yth. ${guestName},\n\nTanpa mengurangi rasa hormat, kami mengundang Bapak/Ibu/Saudara/i untuk menghadiri acara kami:\n\n*${config.coverTitle}*\n${config.coverDateText}\n\nBuka undangan digital Anda di sini:\n${link}\n\nMerupakan suatu kehormatan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir dan memberikan doa restu.`;
     return `https://wa.me/?text=${encodeURIComponent(message)}`;
   };
@@ -174,6 +187,24 @@ export default function ShareAndPayView({
       document.body.removeChild(ta);
       notify(label);
     }
+  };
+
+  const handleNativeShare = async (url: string, guestName: string) => {
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          title: config.coverTitle || 'Undangan Digital',
+          text: `Kepada Yth. ${guestName}, silakan buka undangan acara kami: ${config.coverTitle}`,
+          url,
+        });
+        return;
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          return;
+        }
+      }
+    }
+    await copyText(url, 'Link undangan disalin untuk dibagikan');
   };
 
   const handleSubmitOrderForm = async (e: React.FormEvent) => {
@@ -281,9 +312,17 @@ export default function ShareAndPayView({
               Masuk dengan Google Sebelum Aktivasi
             </h2>
             <p className="text-sm text-[#5E4F43] leading-relaxed">
-              Seluruh pengaturan teks, daftar nama tamu, dan ucapan RSVP tersimpan di Firebase Firestore, sementara foto, video, dan musik tersimpan di Google Drive Anda agar link undangan personal dapat dibuka tamu dari perangkat mana pun.
+              Seluruh pengaturan teks, daftar nama tamu, ucapan RSVP, foto, video, dan musik undangan Anda tersimpan aman secara online agar link undangan personal dapat dibuka tamu dari perangkat mana pun.
             </p>
           </div>
+          {authError && (
+            <div
+              role="alert"
+              className="p-4 rounded-xl bg-red-50 border border-red-200 text-left text-xs sm:text-sm text-red-800 leading-relaxed"
+            >
+              {authError}
+            </div>
+          )}
           <div className="flex justify-center">
             <GoogleSignInButton
               label={isBusy ? 'Memproses...' : 'Masuk dengan Google'}
@@ -294,7 +333,28 @@ export default function ShareAndPayView({
           </div>
         </div>
       ) : !payment.isPaid ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="space-y-6">
+          {isAdmin && onAdminQuickActivate && (
+            <div className="bg-[#FAF6EE] border border-[#9E7328]/40 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-[#241C16]">
+                  Mode Admin Aktif
+                </p>
+                <p className="text-xs text-[#5E4F43]">
+                  Anda sedang login sebagai Admin. Aktifkan undangan ini secara langsung agar link langsung bisa dibagikan ke tamu.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onAdminQuickActivate}
+                disabled={isBusy || !invitationId}
+                className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#231A14] text-[#FAF6EE] text-xs sm:text-sm font-semibold hover:bg-[#382A20] disabled:opacity-60 whitespace-nowrap shrink-0"
+              >
+                {isBusy ? 'Mengaktifkan...' : 'Aktifkan Undangan Sekarang'}
+              </button>
+            </div>
+          )}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* LEFT: 2 PACKAGE OPTIONS & SUMMARY */}
           <div className="lg:col-span-5 space-y-5">
             <div className="bg-[#FAF6EE] border border-[#9E7328]/30 rounded-2xl p-6 space-y-5">
@@ -542,6 +602,7 @@ export default function ShareAndPayView({
             </form>
           </div>
         </div>
+        </div>
       ) : (
         /* SUDAH AKTIF: KELOLA NAMA TAMU & BAGIKAN LINK WHATSAPP */
         <div className="space-y-8">
@@ -562,6 +623,60 @@ export default function ShareAndPayView({
             <span className="text-xs font-semibold text-emerald-900 tabular-nums">
               {guests.length} Nama Tamu Terdaftar
             </span>
+          </div>
+
+          {/* LINK UNDANGAN UMUM SIAP BAGIKAN */}
+          <div className="bg-[#FAF6EE] border border-[#9E7328]/35 rounded-2xl p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="min-w-0 space-y-1">
+              <p className="text-xs uppercase tracking-wider font-semibold text-[#9E7328]">
+                Link Undangan Umum
+              </p>
+              <p className="text-sm font-semibold text-[#241C16]">
+                Bagikan langsung ke grup WhatsApp atau media sosial
+              </p>
+              <p className="text-xs font-mono text-[#5E4F43] truncate">
+                {buildGeneralShareUrl()}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => onPreviewAsGuest('Tamu Undangan')}
+                className="min-h-[40px] px-3.5 py-2 rounded-xl border border-stone-300 bg-white text-xs font-semibold text-[#241C16] hover:bg-stone-50 flex items-center gap-1.5 whitespace-nowrap shrink-0"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>Pratinjau</span>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  copyText(buildGeneralShareUrl(), 'Link undangan umum disalin')
+                }
+                className="min-h-[40px] px-3.5 py-2 rounded-xl border border-stone-300 bg-white text-xs font-semibold text-[#241C16] hover:bg-stone-50 flex items-center gap-1.5 whitespace-nowrap shrink-0"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                <span>Salin Link</span>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleNativeShare(buildGeneralShareUrl(), 'Tamu Undangan')
+                }
+                className="min-h-[40px] px-3.5 py-2 rounded-xl bg-[#231A14] text-[#FAF6EE] text-xs font-semibold hover:bg-[#382A20] flex items-center gap-1.5 whitespace-nowrap shrink-0"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Bagikan</span>
+              </button>
+              <a
+                href={buildWhatsAppHref('Tamu Undangan', buildGeneralShareUrl())}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-h-[40px] px-3.5 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 flex items-center gap-1.5 whitespace-nowrap shrink-0"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>Kirim WA</span>
+              </a>
+            </div>
           </div>
 
           <div className="bg-white border border-stone-200 rounded-2xl p-6 space-y-4">
@@ -671,11 +786,22 @@ export default function ShareAndPayView({
                         <span>Salin Link</span>
                       </button>
 
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleNativeShare(buildGuestShareUrl(g.name), g.name)
+                        }
+                        className="min-h-[40px] px-3.5 py-2 rounded-xl bg-[#231A14] text-[#FAF6EE] text-xs font-semibold hover:bg-[#382A20] flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                      >
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span>Bagikan</span>
+                      </button>
+
                       <a
                         href={buildWhatsAppHref(g.name)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="min-h-[40px] px-3.5 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 flex items-center gap-1.5"
+                        className="min-h-[40px] px-3.5 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 flex items-center gap-1.5 whitespace-nowrap shrink-0"
                       >
                         <MessageCircle className="w-3.5 h-3.5" />
                         <span>Kirim WA</span>

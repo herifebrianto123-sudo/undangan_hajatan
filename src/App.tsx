@@ -17,6 +17,7 @@ import {
 } from './firebase';
 import {
   addGuestsToDb,
+  adminSetInvitationActivation,
   DEFAULT_BILLING_SETTINGS,
   getPublishedInvitationById,
   isAdminUser,
@@ -146,6 +147,7 @@ export default function App() {
   const [invitationOwnerId, setInvitationOwnerId] = useState<string | null>(null);
   const [cloudStatus, setCloudStatus] = useState<CloudSyncStatus>('local');
   const [isBusy, setIsBusy] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Public guest link loading state
   const [guestInvitation, setGuestInvitation] = useState<StoredInvitationRecord | null>(null);
@@ -229,6 +231,7 @@ export default function App() {
       activeSyncUid = firebaseUser.uid;
 
       setUser(firebaseUser);
+      setAuthError(null);
       setCloudStatus('saving');
       setIsBusy(true);
 
@@ -368,8 +371,35 @@ export default function App() {
 
   const handleSignInGoogle = async () => {
     setIsBusy(true);
+    setAuthError(null);
     try {
       await signInWithGoogleWorkspace();
+    } catch (err) {
+      const code =
+        err && typeof err === 'object' && 'code' in err
+          ? String((err as { code?: string }).code || '')
+          : '';
+      const host = window.location.hostname || 'domain ini';
+      if (code === 'auth/unauthorized-domain') {
+        setAuthError(
+          `Login Google belum diizinkan untuk domain "${host}". Tambahkan "${host}" ke daftar Authorized Domains di pengaturan autentikasi proyek dan Authorized JavaScript Origins OAuth, lalu coba lagi.`
+        );
+      } else if (code === 'auth/popup-blocked') {
+        setAuthError(
+          'Jendela pop-up login diblokir oleh browser. Izinkan pop-up untuk situs ini lalu klik Masuk dengan Google kembali.'
+        );
+      } else if (
+        code === 'auth/popup-closed-by-user' ||
+        code === 'auth/cancelled-popup-request'
+      ) {
+        setAuthError(
+          'Proses masuk dengan Google ditutup sebelum selesai. Silakan coba lagi.'
+        );
+      } else {
+        setAuthError(
+          'Gagal masuk dengan akun Google. Pastikan pop-up diizinkan dan domain situs sudah terdaftar.'
+        );
+      }
     } finally {
       setIsBusy(false);
     }
@@ -377,6 +407,7 @@ export default function App() {
 
   const handleSignOut = async () => {
     setIsBusy(true);
+    setAuthError(null);
     try {
       await signOutFirebaseAndDrive();
     } finally {
@@ -581,6 +612,46 @@ export default function App() {
     window.scrollTo({ top: 0 });
   };
 
+  const handleAdminQuickActivate = async () => {
+    if (!user || !userIsAdmin || !invitationId) return;
+    setIsBusy(true);
+    try {
+      await saveInvitationConfigToDb(invitationId, config);
+      const nextInvoice =
+        payment.invoiceCode || `ADM-${String(Date.now()).slice(-6)}`;
+      const nextMethod = payment.method || 'Aktivasi Admin';
+      const nextPackageId = payment.packageId || 'admin-assisted';
+      const nextPackageName =
+        payment.packageName || billingSettings.adminAssistedTitle;
+      const nextAmount =
+        typeof payment.amount === 'number' && payment.amount > 0
+          ? payment.amount
+          : billingSettings.adminAssistedPrice;
+      await adminSetInvitationActivation({
+        invitationId,
+        isPaid: true,
+        packageId: nextPackageId,
+        packageName: nextPackageName,
+        amount: nextAmount,
+        paymentMethod: nextMethod,
+        invoiceCode: nextInvoice,
+      });
+      setPayment({
+        isPaid: true,
+        paymentStatus: 'paid',
+        packageId: nextPackageId,
+        packageName: nextPackageName,
+        amount: nextAmount,
+        method: nextMethod,
+        paidAt: Date.now(),
+        invoiceCode: nextInvoice,
+      });
+      setCloudStatus('saved');
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF6EE] text-[#241C16]">
       <header className="sticky top-0 z-40 bg-[#FAF6EE]/95 backdrop-blur-md border-b border-[#9E7328]/20">
@@ -691,6 +762,24 @@ export default function App() {
         </div>
       </header>
 
+      {authError && view !== 'share' && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <div
+            role="alert"
+            className="p-4 rounded-xl bg-red-50 border border-red-200 flex items-start justify-between gap-4 text-xs sm:text-sm text-red-800"
+          >
+            <p className="leading-relaxed">{authError}</p>
+            <button
+              type="button"
+              onClick={() => setAuthError(null)}
+              className="text-xs font-semibold text-red-900 underline shrink-0"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      )}
+
       {view === 'catalog' && (
         <ThemeCatalogView
           config={config}
@@ -742,8 +831,10 @@ export default function App() {
           isAdmin={userIsAdmin}
           invitationId={invitationId}
           isBusy={isBusy}
+          authError={authError}
           onSignInGoogle={handleSignInGoogle}
           onSignOut={handleSignOut}
+          onAdminQuickActivate={userIsAdmin ? handleAdminQuickActivate : undefined}
           onSubmitOrder={handleSubmitOrder}
           onAddGuests={handleAddGuests}
           onRemoveGuest={handleRemoveGuest}

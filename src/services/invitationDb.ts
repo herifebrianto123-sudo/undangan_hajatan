@@ -40,11 +40,11 @@ export function isAdminUser(user: User | null): boolean {
 export const DEFAULT_BILLING_SETTINGS: BillingSettings = {
   selfEditTitle: 'Edit Sendiri',
   selfEditDesc:
-    'Anda mengisi teks, jadwal acara, dan unggah foto/video ke Google Drive sendiri di Editor Studio. Setelah transfer dikonfirmasi Admin, fitur Daftar Tamu & link undangan otomatis aktif.',
+    'Anda mengisi teks, jadwal acara, serta mengunggah foto, video, dan musik sendiri di Editor Studio. Setelah transfer dikonfirmasi Admin, fitur Daftar Tamu & link undangan otomatis aktif.',
   selfEditPrice: 90000,
   adminAssistedTitle: 'Admin yang Editkan (Terima Beres)',
   adminAssistedDesc:
-    'Cukup kirim teks acara dan foto/video Anda via WhatsApp. Admin yang bantu rapikan desain, isi teks, dan unggahkan media ke Drive sampai undangan siap sebar.',
+    'Cukup kirim teks acara dan foto/video Anda via WhatsApp. Admin yang bantu rapikan desain, isi teks, dan unggahkan media sampai undangan siap sebar.',
   adminAssistedPrice: 120000,
   adminWhatsapp: '',
   paymentAccounts: [

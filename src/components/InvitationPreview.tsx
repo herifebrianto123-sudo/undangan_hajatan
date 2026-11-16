@@ -2338,7 +2338,7 @@ export default function InvitationPreview({
                     {labels.videoTitle}
                   </p>
                   <p className="text-xs opacity-75 max-w-sm mx-auto">
-                    Tambahkan tautan YouTube, Google Drive, atau unggah video MP4 melalui menu Edit Undangan.
+                    Tambahkan tautan video atau unggah video MP4 melalui menu Edit Undangan.
                   </p>
                 </div>
               )}

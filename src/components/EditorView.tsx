@@ -102,7 +102,7 @@ export default function EditorView({
       setDriveError(
         err instanceof Error
           ? err.message
-          : 'Gagal mengambil koleksi Google Drive.'
+          : 'Gagal mengambil koleksi media tersimpan.'
       );
     } finally {
       setDriveLoading(false);
@@ -151,10 +151,10 @@ export default function EditorView({
     if (!file) return;
     try {
       if (hasDriveAccess && getDriveAccessToken()) {
-        setUploadStatus(`Mengunggah "${file.name}" ke Google Drive...`);
+        setUploadStatus(`Mengunggah "${file.name}" ke penyimpanan media...`);
         const uploaded = await uploadMediaToDrive(file, 'foto');
         applyPhotoUrlToTarget(uploaded.imageUrl, target);
-        setUploadStatus('Foto tersimpan di Google Drive & undangan');
+        setUploadStatus('Foto tersimpan & siap tampil di undangan');
         if (showDriveBrowser) {
           void refreshDriveFiles();
         }
@@ -165,7 +165,7 @@ export default function EditorView({
       setUploadStatus('Memproses foto...');
       const dataUrl = await compressImageFile(file);
       applyPhotoUrlToTarget(dataUrl, target);
-      setUploadStatus('Foto diperbarui (hubungkan Drive untuk kualitas penuh)');
+      setUploadStatus('Foto diperbarui (aktifkan penyimpanan media untuk kualitas penuh)');
       window.setTimeout(() => setUploadStatus(null), 2600);
     } catch (err) {
       setUploadStatus(
@@ -178,7 +178,7 @@ export default function EditorView({
     if (!file) return;
     try {
       if (hasDriveAccess && getDriveAccessToken()) {
-        setUploadStatus(`Mengunggah video "${file.name}" ke Google Drive...`);
+        setUploadStatus(`Mengunggah video "${file.name}" ke penyimpanan media...`);
         const uploaded = await uploadMediaToDrive(file, 'video');
         onChange((prev) => ({
           ...prev,
@@ -188,7 +188,7 @@ export default function EditorView({
           },
           features: { ...prev.features, showVideo: true },
         }));
-        setUploadStatus(`Video "${file.name}" tersimpan di Google Drive`);
+        setUploadStatus(`Video "${file.name}" tersimpan & siap diputar tamu`);
         if (showDriveBrowser) {
           void refreshDriveFiles();
         }
@@ -206,12 +206,12 @@ export default function EditorView({
         features: { ...prev.features, showVideo: true },
       }));
       setUploadStatus(
-        `Video lokal "${file.name}" siap (hubungkan Drive agar bisa dibuka tamu)`
+        `Video lokal "${file.name}" siap (aktifkan penyimpanan media agar bisa dibuka tamu)`
       );
       window.setTimeout(() => setUploadStatus(null), 3000);
     } catch (err) {
       setUploadStatus(
-        err instanceof Error ? err.message : 'Gagal mengunggah video ke Google Drive'
+        err instanceof Error ? err.message : 'Gagal mengunggah video'
       );
     }
   };
@@ -220,7 +220,7 @@ export default function EditorView({
     if (!file) return;
     try {
       if (hasDriveAccess && getDriveAccessToken()) {
-        setUploadStatus(`Mengunggah audio "${file.name}" ke Google Drive...`);
+        setUploadStatus(`Mengunggah audio "${file.name}" ke penyimpanan media...`);
         const uploaded = await uploadMediaToDrive(file, 'audio');
         onChange((prev) => ({
           ...prev,
@@ -231,7 +231,7 @@ export default function EditorView({
           },
           features: { ...prev.features, showMusic: true },
         }));
-        setUploadStatus(`Audio "${file.name}" tersimpan di Google Drive`);
+        setUploadStatus(`Audio "${file.name}" tersimpan permanen`);
         if (showDriveBrowser) {
           void refreshDriveFiles();
         }
@@ -250,12 +250,12 @@ export default function EditorView({
         features: { ...prev.features, showMusic: true },
       }));
       setUploadStatus(
-        `Audio lokal "${file.name}" diterapkan (hubungkan Drive agar tersimpan permanen)`
+        `Audio lokal "${file.name}" diterapkan (aktifkan penyimpanan media agar tersimpan permanen)`
       );
       window.setTimeout(() => setUploadStatus(null), 3000);
     } catch (err) {
       setUploadStatus(
-        err instanceof Error ? err.message : 'Gagal mengunggah audio ke Google Drive'
+        err instanceof Error ? err.message : 'Gagal mengunggah audio'
       );
     }
   };
@@ -268,13 +268,13 @@ export default function EditorView({
       await deleteDriveFile(targetFile.id);
       setDriveFiles((prev) => prev.filter((f) => f.id !== targetFile.id));
       setPendingDeleteDriveFile(null);
-      setUploadStatus(`File "${targetFile.name}" dihapus dari Google Drive`);
+      setUploadStatus(`File "${targetFile.name}" dihapus dari koleksi media`);
       window.setTimeout(() => setUploadStatus(null), 2600);
     } catch (err) {
       setDriveError(
         err instanceof Error
           ? err.message
-          : 'Gagal menghapus file dari Google Drive.'
+          : 'Gagal menghapus file dari penyimpanan media.'
       );
       setPendingDeleteDriveFile(null);
     } finally {
@@ -314,7 +314,7 @@ export default function EditorView({
     {
       key: 'showVideo',
       label: 'Video Momen',
-      desc: 'Tampilkan pemutar video MP4, YouTube, atau Google Drive.',
+      desc: 'Tampilkan pemutar video MP4 atau tautan video.',
     },
     {
       key: 'showRsvp',
@@ -384,12 +384,12 @@ export default function EditorView({
                     ? 'Menyimpan...'
                     : cloudStatus === 'error'
                     ? 'Gagal sinkron'
-                    : 'Tersimpan di Cloud'}
+                    : 'Tersimpan Online'}
                 </span>
               </span>
               {!hasDriveAccess && (onConnectDrive || onSignInGoogle) && (
                 <GoogleSignInButton
-                  label="Hubungkan Google Drive"
+                  label="Aktifkan Penyimpanan Media"
                   onClick={onConnectDrive || onSignInGoogle!}
                   className="min-h-[40px] px-3 py-1.5 text-xs"
                 />
@@ -998,7 +998,7 @@ export default function EditorView({
             {/* TAB 4: FOTO, VIDEO & MUSIK */}
             {activeTab === 'media' && (
               <div className="space-y-6">
-                {/* Google Drive Connection Card */}
+                {/* Media Storage Connection Card */}
                 <div className="p-4 rounded-xl border border-[#9E7328]/30 bg-[#FAF6EE] space-y-3">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="space-y-1">
@@ -1006,14 +1006,14 @@ export default function EditorView({
                         <HardDrive className="w-4 h-4 text-[#9E7328]" />
                         <span>
                           {hasDriveAccess
-                            ? 'Google Drive Terhubung · Folder Undangan Studio Media'
-                            : 'Penyimpanan Media di Google Drive'}
+                            ? 'Penyimpanan Media Aktif · Koleksi Media Studio'
+                            : 'Penyimpanan Media Resolusi Tinggi'}
                         </span>
                       </p>
                       <p className="text-[11px] text-[#5E4F43] leading-relaxed">
                         {hasDriveAccess
-                          ? 'Foto, video, dan musik yang Anda unggah otomatis disimpan ke folder "Undangan Studio Media" di Google Drive Anda dengan izin baca publik untuk tamu.'
-                          : 'Hubungkan Google Drive agar foto resolusi tinggi, video MP4, dan audio tersimpan permanen di folder Google Drive Anda tanpa membebani batas database.'}
+                          ? 'Foto, video, dan musik yang Anda unggah otomatis tersimpan di penyimpanan media Anda dan siap dibuka oleh seluruh tamu undangan.'
+                          : 'Aktifkan penyimpanan media akun Google Anda agar foto resolusi tinggi, video MP4, dan audio tersimpan permanen serta tampil lancar di perangkat tamu.'}
                       </p>
                     </div>
 
@@ -1033,8 +1033,8 @@ export default function EditorView({
                           <FolderOpen className="w-3.5 h-3.5 text-[#9E7328]" />
                           <span>
                             {showDriveBrowser
-                              ? 'Tutup Koleksi Drive'
-                              : 'Lihat Koleksi Drive'}
+                              ? 'Tutup Koleksi Media'
+                              : 'Lihat Koleksi Media'}
                           </span>
                         </button>
                       </div>
@@ -1043,8 +1043,8 @@ export default function EditorView({
                         <GoogleSignInButton
                           label={
                             user
-                              ? 'Hubungkan Google Drive'
-                              : 'Masuk & Hubungkan Google Drive'
+                              ? 'Aktifkan Penyimpanan Media'
+                              : 'Masuk & Aktifkan Media'
                           }
                           onClick={onConnectDrive || onSignInGoogle!}
                         />
@@ -1056,7 +1056,7 @@ export default function EditorView({
                     <div className="pt-3 border-t border-[#9E7328]/20 space-y-3">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-xs font-semibold text-[#241C16]">
-                          Koleksi File Undangan Studio Media ({driveFiles.length})
+                          Koleksi Media Tersimpan ({driveFiles.length})
                         </p>
                         <button
                           type="button"
@@ -1081,11 +1081,11 @@ export default function EditorView({
 
                       {driveLoading && driveFiles.length === 0 ? (
                         <p className="text-xs text-[#5E4F43] py-3">
-                          Mengambil daftar file dari Google Drive...
+                          Mengambil daftar media tersimpan...
                         </p>
                       ) : driveFiles.length === 0 ? (
                         <p className="text-xs text-[#5E4F43] py-2">
-                          Belum ada file di folder Undangan Studio Media. Unggah foto, video, atau musik di bawah untuk menyimpannya ke Drive.
+                          Belum ada file di koleksi media. Unggah foto, video, atau musik di bawah untuk menyimpannya.
                         </p>
                       ) : (
                         <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
@@ -1121,12 +1121,12 @@ export default function EditorView({
                                     </p>
                                     <p className="text-[11px] text-[#5E4F43]">
                                       {isImage
-                                        ? 'Foto Drive'
+                                        ? 'Foto'
                                         : isVideo
-                                        ? 'Video Drive'
+                                        ? 'Video'
                                         : isAudio
-                                        ? 'Audio Drive'
-                                        : 'Media Drive'}
+                                        ? 'Audio'
+                                        : 'Media'}
                                     </p>
                                   </div>
                                 </div>
@@ -1254,7 +1254,7 @@ export default function EditorView({
 
                                   <button
                                     type="button"
-                                    aria-label={`Hapus ${file.name} dari Drive`}
+                                    aria-label={`Hapus ${file.name}`}
                                     onClick={() => setPendingDeleteDriveFile(file)}
                                     className="min-w-[32px] min-h-[32px] rounded-md border border-red-200 text-red-700 bg-white flex items-center justify-center hover:bg-red-50"
                                   >
@@ -1410,7 +1410,7 @@ export default function EditorView({
                         video: { ...p.video, src: e.target.value },
                       }))
                     }
-                    placeholder="Tempel link YouTube, Google Drive, atau URL MP4"
+                    placeholder="Tempel link video YouTube atau URL MP4"
                     className="w-full min-h-[42px] px-3.5 rounded-xl border border-stone-300 text-sm"
                   />
                   <div className="flex flex-wrap items-center gap-3">
@@ -1704,7 +1704,7 @@ export default function EditorView({
                 id="drive-delete-modal-title"
                 className="font-serif text-xl font-semibold text-[#241C16]"
               >
-                Hapus File Google Drive?
+                Hapus File Media?
               </h3>
               <button
                 type="button"
@@ -1721,7 +1721,7 @@ export default function EditorView({
               <strong className="text-[#241C16]">
                 &ldquo;{pendingDeleteDriveFile.name}&rdquo;
               </strong>{' '}
-              secara permanen dari Google Drive Anda? Jika masih dipakai di undangan, foto atau media terkait tidak akan tampil lagi bagi tamu.
+              secara permanen dari koleksi media Anda? Jika masih dipakai di undangan, foto atau media terkait tidak akan tampil lagi bagi tamu.
             </p>
             <div className="flex flex-wrap justify-end gap-2.5 pt-2">
               <button
